@@ -1,3 +1,4 @@
+#这个文件存储公共的配置
 spring:
   profiles:
     active: ewa
@@ -142,11 +143,8 @@ dashboard:
   session:
     timeout: 600 #用户登陆多久没有操作就过期，单位分钟 600=10小时
   job:
-    enable: true
+    enable: false
   sql:
     show: true
     minEscape: 800 # 只打印超过80ms的
-
-scheduling:
-  reward24hUrl: https://price.xxx.com/filfox/overview
 

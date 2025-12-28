@@ -1,6 +1,7 @@
 package one.yiran.dashboard.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -58,7 +59,7 @@ public class RadisConfig {
     @Bean
     public JedisPool jedisPool(JedisPoolConfig poolConfig) {
         JedisPool jedisPool = new JedisPool(poolConfig,
-                host, port, timeout, password, database, "sp-back");
+                host, port, timeout, StringUtils.isBlank(password) ? null: password, database, "sp-back");
         return jedisPool;
     }
 }

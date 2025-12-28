@@ -1,6 +1,7 @@
+# 具体配置。数据库账号密码，redis账号密码
 spring:
   datasource:
-    url: jdbc:p6spy:mysql://127.0.0.1:3306/ewa?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+    url: jdbc:mysql://127.0.0.1:3306/ewa?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
     username: ewa
     password: ewa@123456
     hikari:
@@ -14,6 +15,4 @@ spring:
     database: 1
 
 dashboard:
-  web3j:
-    polygonRpc: https://polygon-rpc.com
-
+  cache: redis # local redis
