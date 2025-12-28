@@ -1,0 +1,12 @@
+package com.ext.dao;
+
+import com.ext.entity.Article;
+import one.yiran.db.common.dao.BaseDao;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ArticleDao extends BaseDao<Article, Long>, JpaSpecificationExecutor<Article> {
+
+    Article findByChannelIdAndType(Long channelId, String type);
+}

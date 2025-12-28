@@ -1,0 +1,96 @@
+package one.yiran.dashboard.interceptor;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
+import one.yiran.common.util.BigDecimalFormatUtil;
+import one.yiran.common.util.DateUtil;
+import one.yiran.common.util.IpUtil;
+import one.yiran.dashboard.common.constants.Global;
+import one.yiran.db.common.util.ServletRequestUtil;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 打印请求响应的日志耗时
+ */
+@Slf4j
+public class HttpLogPrinter {
+
+    public static final String HTTP_SERVLET_KEY_IS_AJAX = ServletRequestUtil.HTTP_SERVLET_KEY_IS_AJAX;
+    public static final String HTTP_SERVLET_KEY_REQ_JSON = ServletRequestUtil.HTTP_SERVLET_KEY_REQ_JSON;
+    public static final String HTTP_SERVLET_KEY_REQ_TIME = ServletRequestUtil.HTTP_SERVLET_KEY_REQ_TIME;
+    public static void print(HttpServletRequest httpServletRequest, Object responseObject) {
+        try {
+            boolean isAjax = httpServletRequest.getAttribute(HttpLogPrinter.HTTP_SERVLET_KEY_IS_AJAX) == null ? false : Boolean.valueOf(httpServletRequest.getAttribute(HTTP_SERVLET_KEY_IS_AJAX).toString()).booleanValue();
+            if(!isAjax)
+                return;
+
+            String reqMessage = httpServletRequest.getAttribute(HTTP_SERVLET_KEY_REQ_JSON) == null ? "" : httpServletRequest.getAttribute(HTTP_SERVLET_KEY_REQ_JSON).toString();
+
+            String reqTime = "";
+            try {
+                Date reqTimeS = httpServletRequest.getAttribute(HTTP_SERVLET_KEY_REQ_TIME) == null ? null : (Date) httpServletRequest.getAttribute(HTTP_SERVLET_KEY_REQ_TIME);
+                if (reqTimeS!= null) {
+                    reqTime = DateUtil.parseDateToStr("HH:mm:ss.SSS",reqTimeS);
+                    long gap = (System.currentTimeMillis() - reqTimeS.getTime());
+                    String ms = BigDecimalFormatUtil.format(new BigDecimal(gap).divide(new BigDecimal(1000),3, BigDecimal.ROUND_DOWN),3);
+                    reqTime = reqTime + "耗时" + ms + "s";
+                }
+            } catch (Exception e) {
+                log.error("解析请求时间异常",e);
+            }
+            String respMessage = JSON.toJSONString(responseObject);
+            String ip = IpUtil.getRemoteAddr(httpServletRequest);
+            String directId = httpServletRequest.getRemoteAddr().equals("0:0:0:0:0:0:0:1") ? "127.0.0.1": httpServletRequest.getRemoteAddr();
+            String ipDesc = StringUtils.equalsIgnoreCase(ip,directId) ? ip : directId + "," + ip;
+            StringBuilder sb = new StringBuilder();
+            String afterReqMessage = "";
+            try {
+                if(StringUtils.isNotBlank(reqMessage)) {
+                    Map<String, Object> reqMap = JSONObject.parseObject(reqMessage, Map.class);
+                    Map<String, Object> newMap = new HashMap<>();
+                    reqMap.entrySet().forEach(
+                            (ee) -> {
+                                if (StringUtils.containsAnyIgnoreCase(ee.getKey(),"pass","Password")) {
+                                    newMap.put(ee.getKey(), "***");
+                                } else {
+                                    newMap.put(ee.getKey(), ee.getValue());
+                                }
+                            }
+                    );
+                    afterReqMessage = JSON.toJSONString(newMap);
+                }
+            } catch (Exception e){
+            }
+            respMessage = StringUtils.substring(respMessage,0,1000) + (StringUtils.length(respMessage) > 1000 ? "..." :"");
+            String queryString = StringUtils.defaultIfBlank(httpServletRequest.getQueryString(),"");
+            queryString = StringUtils.isNotBlank(queryString) ? "?" + queryString : "";
+            String method = httpServletRequest.getMethod();
+            String channel = StringUtils.defaultString(httpServletRequest.getHeader(Global.getChannelKey()),"渠道为空");
+            String auth = StringUtils.defaultString(httpServletRequest.getHeader(Global.getAuthKey()),"TOKEN为空");
+            String loginType = StringUtils.defaultString((String)httpServletRequest.getAttribute(ServletRequestUtil.HTTP_SERVLET_KEY_LOGIN_TYPE),"");
+            Long loginId = (Long)httpServletRequest.getAttribute(ServletRequestUtil.HTTP_SERVLET_KEY_LOGIN_ID);
+            String loginName = StringUtils.defaultString((String)httpServletRequest.getAttribute(ServletRequestUtil.HTTP_SERVLET_KEY_LOGIN_NAME),"");
+            String loginInfo = "";
+            if (loginId != null) {
+                loginInfo = loginType + "[" + loginName + "][" + loginId + "]";
+            }
+            sb.append("\n>>>>> 请求:" + ipDesc + "|" + method+ "|" + httpServletRequest.getRequestURI() + queryString + "|" +
+                    channel+ "|"+ auth + "|"
+                     + reqTime + "|" + loginInfo + "|").append("\n");
+            if(StringUtils.isNotBlank(afterReqMessage) && !StringUtils.equalsIgnoreCase(afterReqMessage,"{}"))
+                sb.append(afterReqMessage).append("\n");
+            sb.append("<<<<< 应答:").append("");
+            sb.append(respMessage);
+            log.info(sb.toString());
+        } catch (Exception e){
+            log.error("打印日志异常:{}",e.getMessage());
+        }
+    }
+}

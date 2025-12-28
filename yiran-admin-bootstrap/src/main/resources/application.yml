@@ -1,0 +1,152 @@
+spring:
+  profiles:
+    active: ewa
+  main:
+    banner-mode: "OFF"
+    allow-bean-definition-overriding: true
+  application:
+    name: SP后台管理
+  datasource:
+    url: jdbc:mysql://1.1.1.1:3306/sp-back?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+    username: xxx
+    password: xxx
+    hikari:
+      maximum-pool-size: 60 # 连接池最大连接数，默认是 10
+      connection-timeout: 60000 # 链接超时时间，默认 30000(30 秒)
+      idle-timeout: 60000  # 空闲连接存活最大时间，默认 600000(10 分钟)
+      validation-timeout: 3000  # 连接将被测试活动的最大时间量
+      max-lifetime: 60000  # 此属性控制池中连接的最长生命周期，值 0 表示无限生命周期，默认 1800000(30 分钟)
+      login-timeout: 5  # 连接到数据库时等待的最长时间(秒)
+      minimum-idle: 10  # 池中维护的最小空闲连接数
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+  jpa:
+    properties:
+      hibernate:
+        naming:
+          strategy: org.hibernate.cfg.ImprovedNamingStrategy
+        format_sql: false
+        metadata_builder_contributor: one.yiran.dashboard.config.sql.GroupConcatSqlFunctionsMetadataBuilderContributor
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: false
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: update
+  redis:
+    prefix: sp
+    host: 1.1.1.1
+    port: 6379
+    password: xxx
+    timeout: 3000
+    database: 6
+    jedis:
+      pool:
+        max-idle: 8
+        min-idle: 0
+        max-active: 8
+        max-wait: -1
+        time-between-eviction-runs: 30
+  mvc:
+    throw-exception-if-no-handler-found: true
+    static-path-pattern: /static/*
+    async:
+      request-timeout: 110000
+  messages:
+    encoding: UTF-8
+    basename: i18n/messages
+  servlet:
+    multipart:
+      # 单个文件大小
+      max-file-size:  20MB
+      # 设置总上传的文件大小
+      max-request-size:  20MB
+
+  devtools:
+    restart:
+      # 热部署开关
+      enabled: false
+
+
+server:
+  port: 8800
+  tomcat:
+    uri-encoding: UTF-8
+    max-http-header-size: 81940
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+  address: 0.0.0.0
+
+logging:
+  level:
+    root: INFO
+    one.yiran: INFO
+    org.springframework: INFO
+    org.springframework.data: INFO
+    org.springframework.security: INFO
+    org.springframework.beans.factory.support.DefaultListableBeanFactory: INFO
+    org.apache.http.client.protocol.ResponseProcessCookies: ERROR
+    org.apache.shiro: INFO
+  file:
+    name: ewa-bootstrap
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: false
+  # 排除链接（多个用逗号分隔）
+  excludes: /system/notice/*
+  # 匹配链接
+  urlPatterns: /system/*,/monitor/*,/tool/*
+dashboard:
+  version: 1.0.0
+  cache: local # local redis
+  salt: salt@defalut
+  admin: admin,system # 用,分割的超级管理员
+  debug: # debug模式用户不能登陆，只能下面的账号密码登陆
+    mode: false
+    loginName: admin
+    password: password
+  password:
+    limit:
+      count: 3
+      time: 1
+    pattern:
+      login: ^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,20}$
+      asset: ^[0-9]{6}$
+  captcha:
+    type: none # none blockPuzzle clickWord
+  filepath: ${BASE_DIR:/tmp}/muggle
+  ali:
+    oss:
+      enable: false
+      bucket:
+      endpoint:
+      accessKey:
+      accessSecret:
+  upload:
+    filepath: ${dashboard.filepath}/upload/
+    #filepath: /oss/upload
+  avatar:
+    filepath: ${dashboard.filepath}/avatar/
+  export:
+    filepath: ${java.io.tmpdir}/export/
+  ip:
+    addressEnabled: true
+    useLocalDatabase: true
+    filepath: classpath:data/qqwry.dat
+    filepathV6: classpath:data/ipv6wry.db
+  session:
+    timeout: 600 #用户登陆多久没有操作就过期，单位分钟 600=10小时
+  job:
+    enable: true
+  sql:
+    show: true
+    minEscape: 800 # 只打印超过80ms的
+
+scheduling:
+  reward24hUrl: https://price.xxx.com/filfox/overview
+
