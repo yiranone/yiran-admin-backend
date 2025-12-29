@@ -15,6 +15,7 @@ public class PermissionConstants {
         public static final String RESET_PWD = PREFIX + "resetPwd";
         public static final String UNLOCK = PREFIX + "unlock";
         public static final String AUTH = PREFIX + "auth";
+        public static final String GOOGLE = PREFIX + "google";
     }
 
     public static class Dept {

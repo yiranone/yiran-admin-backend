@@ -297,6 +297,17 @@ public class UserAdminController {
         return WrapUtil.wrapWithExist(sysUserService.isEmailExist(email,userId));
     }
 
+    @RequirePermission(PermissionConstants.User.GOOGLE)
+    @Log(title = "重置谷歌验证码", businessType = BusinessType.GRANT)
+    @PostMapping("/resetGoogle")
+    public void resetGoogle(@ApiParam(required = true) Long userId) {
+        SysUser u = sysUserService.findUserCheckExist(userId);
+        sysUserService.checkAdminModifyAllowed(u.getLoginName(), "重置谷歌验证码");
+        if (StringUtils.isBlank(u.getGoogleKey()))
+            throw BusinessException.build("用户[" + u.getLoginName() + "]未绑定谷歌验证码");
+        sysUserService.resetGoogle(u.getUserId());
+    }
+
     private void checkUserFields(SysUser user){
         if (sysUserService.isLoginNameExist(user.getLoginName(),user.getUserId())) {
             throw BusinessException.build("用户名字["+user.getLoginName()+"]已经存在");
