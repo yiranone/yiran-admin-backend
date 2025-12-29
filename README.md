@@ -2,6 +2,8 @@
  后台管理
 
 # 主要技术
+
+- jdk1.8
 - spring boot
 - querdsl
 - hibernate

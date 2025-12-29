@@ -16,9 +16,9 @@
     </modules>
 
     <parent>
-        <groupId>one.yiran</groupId>
+        <groupId>io.github.yiranone</groupId>
         <artifactId>yiran-parent</artifactId>
-        <version>11.5-SNAPSHOT</version>
+        <version>11.2.7.13</version>
     </parent>
 
     <properties>
@@ -35,6 +35,7 @@
         <velocity.version>1.7</velocity.version>
 
         <okhttp3.version>4.10.0</okhttp3.version>
+        <google.auth.version>1.2.0</google.auth.version>
 
         <project.encoding>UTF-8</project.encoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -116,11 +117,6 @@
                 <version>2.10.1</version>
             </dependency>
             <dependency>
-                <groupId>one.yiran</groupId>
-                <artifactId>sofa-commons</artifactId>
-                <version>10.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
                 <groupId>com.querydsl</groupId>
                 <artifactId>querydsl-jpa</artifactId>
                 <version>${querydsl.version}</version>
@@ -150,19 +146,31 @@
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.warrenstrange</groupId>
+                <artifactId>googleauth</artifactId>
+                <version>${google.auth.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>8.0.28</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <repositories>
         <repository>
-            <id>rdc-releases</id>
-            <url>https://maven.izhong.top/release/</url>
+            <id>central</id>
+            <name>Maven Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
-        <repository>
-            <id>rdc-snapshot</id>
-            <url>https://maven.izhong.top/snapshot/</url>
-        </repository>
-
         <repository>
             <id>public</id>
             <name>aliyun nexus</name>
@@ -172,7 +180,6 @@
             </releases>
         </repository>
     </repositories>
-
 
     <pluginRepositories>
         <pluginRepository>
@@ -190,6 +197,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <skip>true</skip>
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

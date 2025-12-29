@@ -152,6 +152,10 @@ public class SysUser extends TimedBasedEntity {
     @NotNull(message = "渠道号不能为空")
     @Column(nullable = false)
     private Long channelId;
+
+    @Column(length = 60)
+    private String googleKey;
+
     /**
      * 角色集合
      */

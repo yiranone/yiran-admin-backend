@@ -561,6 +561,7 @@ CREATE TABLE `sys_user` (
                             `assert_password_update_time` datetime DEFAULT NULL,
                             `assert_salt` varchar(32) DEFAULT NULL,
                             `channel_id` bigint DEFAULT NULL,
+                            `google_key` varchar(60) DEFAULT NULL,
                             PRIMARY KEY (`user_id`),
                             KEY `idx_phoneNumber` (`phone_number`),
                             KEY `idx_userName` (`user_name`)

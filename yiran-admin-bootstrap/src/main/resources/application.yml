@@ -5,6 +5,7 @@ spring:
   main:
     banner-mode: "OFF"
     allow-bean-definition-overriding: true
+    allow-circular-references: true
   application:
     name: SP后台管理
   datasource:
@@ -147,4 +148,7 @@ dashboard:
   sql:
     show: true
     minEscape: 800 # 只打印超过80ms的
-
+  google:
+    auth:
+      enabled: true
+      env: www.yiran.google

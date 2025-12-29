@@ -78,4 +78,8 @@ public interface SysUserService {
     void checkAdminModifyAllowed(String loginName, String actionName);
 
     SysUser registerUser(SysUser user);
+
+    void checkAndBindGoogle(Long userId, String loginName, String googleCode);
+
+    void resetGoogle(Long userId);
 }

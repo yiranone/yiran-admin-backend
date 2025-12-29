@@ -12,9 +12,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>one.yiran</groupId>
+            <groupId>io.github.yiranone</groupId>
             <artifactId>yiran-commons</artifactId>
-            <version>11.5-SNAPSHOT</version>
+            <version>11.2.7.13</version>
         </dependency>
         <!-- SpringWeb模块 -->
         <dependency>

@@ -1,10 +1,12 @@
 package one.yiran.dashboard.web.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import one.yiran.common.util.Base64Util;
 import one.yiran.dashboard.captcha.service.impl.DefaultCaptchaService;
 import one.yiran.dashboard.common.annotation.AjaxWrapper;
 import one.yiran.dashboard.common.annotation.ApiParam;
 import one.yiran.common.exception.BusinessException;
+import one.yiran.dashboard.common.expection.GoogleAuthException;
 import one.yiran.dashboard.common.model.UserSession;
 import one.yiran.dashboard.common.constants.Global;
 import one.yiran.dashboard.common.constants.SystemConstants;
@@ -15,6 +17,8 @@ import one.yiran.dashboard.entity.SysDept;
 import one.yiran.dashboard.entity.SysUser;
 import one.yiran.dashboard.factory.AsyncFactory;
 import one.yiran.dashboard.factory.AsyncManager;
+import one.yiran.dashboard.security.model.GoogleSecretBO;
+import one.yiran.dashboard.security.service.GoogleAuthService;
 import one.yiran.dashboard.security.service.PasswordService;
 import one.yiran.dashboard.common.expection.user.UserBlockedException;
 import one.yiran.dashboard.common.expection.user.UserDeleteException;
@@ -37,6 +41,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -65,10 +70,12 @@ public class UserLoginController {
     private DefaultCaptchaService captchaService;
     @Autowired
     private SysChannelService sysChannelService;
+    @Autowired
+    private GoogleAuthService googleAuthService;
 
     @PostMapping("/login")
     public UserPageVO ajaxLogin(@ApiParam String username, @ApiParam String password,
-                                @ApiParam String captchaVerification) {
+                                @ApiParam String captchaVerification, @ApiParam String googleCode) {
         if(Global.isDebugMode()) {
             return debugFunction(username, password);
         }
@@ -113,7 +120,32 @@ public class UserLoginController {
 
         if (user == null) {
             AsyncManager.me().execute(AsyncFactory.recordUserLoginInfo(null,null,username, SystemConstants.LOGIN_FAIL, MessageUtil.message("user.not.exists")));
-            throw new UserNotFoundException(username);
+//            throw new UserNotFoundException(username);
+            throw BusinessException.build("login fail");
+        }
+
+        //开启了谷歌认证校验，但是用户没有绑定谷歌认证
+        boolean isGoogleAuth = googleAuthService.isEnable();
+        if (StringUtils.isBlank(googleCode)) {
+            if (isGoogleAuth && StringUtils.isBlank(user.getGoogleKey())) {
+                GoogleSecretBO googleAuthBoss = googleAuthService.getGoogleAuth(user.getLoginName());
+                throw GoogleAuthException.build("用户未绑定谷歌认证，请先绑定", googleAuthBoss);
+            }
+        }
+        //开启了谷歌认证校验，已经绑定了，但是没有输入谷歌验证码
+        if (isGoogleAuth && StringUtils.isBlank(googleCode)) {
+            throw GoogleAuthException.build("请输入谷歌验证码");
+        }
+        //谷歌验证
+        if (StringUtils.isNotBlank(googleCode)) {
+            if (StringUtils.isBlank(user.getGoogleKey())) {
+                //首次绑定谷歌认证，校验谷歌验证码
+                sysUserService.checkAndBindGoogle(user.getUserId(), user.getLoginName(), googleCode);
+            } else {
+                //已绑定谷歌认证，校验谷歌验证码
+                String googleKey = new String(Base64Util.decodeFromString(user.getGoogleKey()), StandardCharsets.UTF_8);
+                googleAuthService.checkGoogleCode(googleKey, googleCode);
+            }
         }
 
         if (Boolean.TRUE.equals(user.getIsDelete())) {
@@ -238,6 +270,7 @@ public class UserLoginController {
     public Map<String,String> loginConfig(HttpServletRequest request) {
         Map<String,String> map = new HashMap<>();
         map.put("captcha",Global.getCaptchaType());
+        map.put("googleAuthEnabled", googleAuthService.isEnable() ? "1" : "0");
 
         String hostName = request.getHeader("Host");
         log.info("Host:{}",hostName);

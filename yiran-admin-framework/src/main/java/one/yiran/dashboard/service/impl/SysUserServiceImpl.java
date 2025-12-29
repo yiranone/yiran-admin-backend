@@ -9,6 +9,7 @@ import com.querydsl.core.types.dsl.SimpleTemplate;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
+import one.yiran.common.util.Base64Util;
 import one.yiran.dashboard.common.constants.UserConstants;
 import one.yiran.common.domain.PageModel;
 import one.yiran.common.domain.PageRequest;
@@ -18,6 +19,7 @@ import one.yiran.dashboard.dao.UserDao;
 import one.yiran.dashboard.dao.UserPostDao;
 import one.yiran.dashboard.dao.UserRoleDao;
 import one.yiran.dashboard.entity.*;
+import one.yiran.dashboard.security.service.GoogleAuthService;
 import one.yiran.dashboard.vo.UserPageVO;
 import one.yiran.db.common.service.CrudBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,6 +67,9 @@ public class SysUserServiceImpl extends CrudBaseServiceImpl<Long,SysUser> implem
 
     @Autowired
     private SysConfigService sysConfigService;
+
+    @Autowired
+    private GoogleAuthService googleAuthService;
 
     @Override
     public SysUser login(String username, String password) {
@@ -640,5 +646,24 @@ public class SysUserServiceImpl extends CrudBaseServiceImpl<Long,SysUser> implem
     public SysUser registerUser(SysUser user) {
         user.setUserType(UserConstants.REGISTER_USER_TYPE);
         return userDao.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void checkAndBindGoogle(Long userId, String loginName, String googleCode) {
+        String secret = googleAuthService.getGoogleSecret(loginName);
+        googleAuthService.checkGoogleCode(secret, googleCode);
+
+        SysUser db = userDao.findByUserId(userId);
+        db.setGoogleKey(Base64Util.encodeToString(secret.getBytes(StandardCharsets.UTF_8)));
+        userDao.saveAndFlush(db);
+    }
+
+    @Override
+    @Transactional
+    public void resetGoogle(Long userId) {
+        SysUser db = userDao.findByUserId(userId);
+        db.setGoogleKey(null);
+        userDao.saveAndFlush(db);
     }
 }

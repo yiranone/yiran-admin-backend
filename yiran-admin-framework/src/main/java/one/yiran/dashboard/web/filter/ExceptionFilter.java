@@ -3,9 +3,11 @@ package one.yiran.dashboard.web.filter;
 
 import lombok.extern.slf4j.Slf4j;
 import one.yiran.common.exception.BusinessException;
+import one.yiran.dashboard.common.expection.GoogleAuthException;
 import one.yiran.dashboard.common.expection.user.UserException;
 import one.yiran.dashboard.common.expection.user.UserHasNotPermissionException;
 import one.yiran.common.domain.ResponseContainer;
+import one.yiran.dashboard.common.util.TraceUtil;
 import one.yiran.dashboard.interceptor.HttpLogPrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -39,7 +42,8 @@ public class ExceptionFilter implements HandlerExceptionResolver {
         //httpServletResponse.flushBuffer();
 
         int code = ResponseContainer.FAIL_CODE;
-        String msg = "System exception";
+        String msg = "System error, please try again later";
+        Object data = null;
         if (e instanceof UserHasNotPermissionException) {
             UserHasNotPermissionException ce = (UserHasNotPermissionException) e;
             if (StringUtils.isNotBlank(ce.getPermission())) {
@@ -54,20 +58,25 @@ public class ExceptionFilter implements HandlerExceptionResolver {
             log.error("Request {} exception, user:{},{}",e.getClass().getSimpleName(),uexp.getLoginName(),uexp.getMessage());
             code = uexp.getCode();
             msg = uexp.getMessage();
+        } else if (e instanceof GoogleAuthException) {
+            GoogleAuthException ex = (GoogleAuthException) e;
+            code = ex.getCode();
+            msg = ex.getMessage();
+            data = ex.getData();
         } else if (e instanceof BusinessException) {
             log.error("Request BusinessException exception", e);
             BusinessException bexp = (BusinessException) e;
             code = bexp.getCode();
             msg = bexp.getMessage();
+        } else if (e instanceof MethodArgumentNotValidException) {
+            MethodArgumentNotValidException ex = (MethodArgumentNotValidException) e;
+            log.info("Parameter check exception:{}", ex.getBindingResult());
+            msg = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         } else if(e instanceof BindException){
             BindException ex = (BindException)e;
             List<ObjectError> errors = ex.getAllErrors();
             ObjectError error = errors.get(0);
             msg = error.getDefaultMessage();
-        } else if(e instanceof MethodArgumentNotValidException){
-            MethodArgumentNotValidException ex = (MethodArgumentNotValidException)e;
-            log.info("Parameter check exception:{}",ex.getBindingResult());
-            msg = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         } else if(e instanceof NoHandlerFoundException){
             NoHandlerFoundException ex = (NoHandlerFoundException)e;
             msg = "The requested resource does not exist:" + ex.getRequestURL();
@@ -91,6 +100,8 @@ public class ExceptionFilter implements HandlerExceptionResolver {
             }
             log.error("Request failed, unknown exception", e);
             String message = e.getMessage();
+            log.error("stack: {}", ExceptionUtils.getStackTrace(e));
+            log.error("stack-2: {}", Arrays.toString(e.getStackTrace()));
             if (StringUtils.isNotBlank(message))
                 msg = message;
         }
@@ -98,6 +109,10 @@ public class ExceptionFilter implements HandlerExceptionResolver {
         ModelAndView v = new ModelAndView(new MappingJackson2JsonView());
         v.addObject("code", code);
         v.addObject("msg", msg);
+        v.addObject("traceId", TraceUtil.getTraceId());
+        if (data != null) {
+            v.addObject("data", data);
+        }
 
         HttpLogPrinter.print(httpServletRequest,v.getModel());
 
