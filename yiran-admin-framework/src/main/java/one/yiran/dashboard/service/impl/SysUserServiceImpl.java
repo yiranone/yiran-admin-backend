@@ -655,7 +655,7 @@ public class SysUserServiceImpl extends CrudBaseServiceImpl<Long,SysUser> implem
         googleAuthService.checkGoogleCode(secret, googleCode);
 
         SysUser db = userDao.findByUserId(userId);
-        db.setGoogleKey(Base64Util.encodeToString(secret.getBytes(StandardCharsets.UTF_8)));
+        db.setGoogleKey(secret);
         userDao.saveAndFlush(db);
     }
 

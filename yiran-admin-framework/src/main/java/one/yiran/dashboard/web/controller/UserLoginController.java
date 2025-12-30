@@ -143,7 +143,7 @@ public class UserLoginController {
                 sysUserService.checkAndBindGoogle(user.getUserId(), user.getLoginName(), googleCode);
             } else {
                 //已绑定谷歌认证，校验谷歌验证码
-                String googleKey = new String(Base64Util.decodeFromString(user.getGoogleKey()), StandardCharsets.UTF_8);
+                String googleKey = user.getGoogleKey();
                 googleAuthService.checkGoogleCode(googleKey, googleCode);
             }
         }
