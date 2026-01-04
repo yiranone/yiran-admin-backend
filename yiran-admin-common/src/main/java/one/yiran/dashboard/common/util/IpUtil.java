@@ -1,6 +1,5 @@
 package one.yiran.dashboard.common.util;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import one.yiran.dashboard.common.constants.Global;
 import one.yiran.dashboard.common.ip.IPLocation;
@@ -120,8 +119,6 @@ public class IpUtil {
         return bytes;
     }
 
-    public static final String IP_URL = "http://ip.taobao.com/service/getIpInfo.php";
-
     public static String getRealAddressByIP(String ip) {
         if (StringUtils.isBlank(ip)) {
             return "";
@@ -132,39 +129,18 @@ public class IpUtil {
             return "内网IP";
         }
         if (Global.isAddressEnabled()) {
-            if(Global.isUseLocalIpDatabase()) {
-                try {
-                    Location lo = null;
-                    if(StringUtils.contains(ip,":")) {
-                        lo = IPLocationV6.fetchIP(ip);
-                    } else {
-                        lo = IPLocation.fetchIP(ip);
-                    }
-                    if(lo != null) {
-                        address = lo.country + "|" + lo.area;
-                    }
-                } catch (Exception e) {
-                    log.error("获取IP信息异常",e);
+            try {
+                Location lo = null;
+                if(StringUtils.contains(ip,":")) {
+                    lo = IPLocationV6.fetchIP(ip);
+                } else {
+                    lo = IPLocation.fetchIP(ip);
                 }
-            } else {
-                String rspStr = HttpUtil.sendPost(IP_URL, "ip=" + ip);
-                if (StringUtils.isEmpty(rspStr)) {
-                    log.error("获取地理位置异常 {}:{}", ip, rspStr);
-                    return address;
+                if(lo != null) {
+                    address = lo.country + "|" + lo.area;
                 }
-                JSONObject obj = JSONObject.parseObject(rspStr);
-                JSONObject data = obj.getObject("data", JSONObject.class);
-                String country = data.getString("country");
-                country = StringUtils.equals(country, "中国") ? "" : country;
-                String region = data.getString("region");
-                region = StringUtils.equals(region, "XX") ? "" : region;
-                String city = data.getString("city");
-                city = StringUtils.equals(city, "XX") ? "" : city;
-                String county = data.getString("county");
-                county = StringUtils.equals(county, "XX") ? "" : county;
-                String isp = data.getString("isp");
-                isp = StringUtils.equals(isp, "XX") ? "" : isp;
-                address = String.format("%s%s%s%s|%s", country, region, city, county, isp);
+            } catch (Exception e) {
+                log.error("获取IP信息异常",e);
             }
         }
         return address;

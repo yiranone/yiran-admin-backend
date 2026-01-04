@@ -138,7 +138,6 @@ dashboard:
     filepath: ${java.io.tmpdir}/export/
   ip:
     addressEnabled: true
-    useLocalDatabase: true
     filepath: classpath:data/qqwry.dat
     filepathV6: classpath:data/ipv6wry.db
   session:

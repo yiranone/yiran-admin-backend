@@ -259,11 +259,6 @@ public class Global {
         return Boolean.valueOf(getConfig("dashboard.ip.addressEnabled"));
     }
 
-
-    public static Boolean isUseLocalIpDatabase() {
-        return Boolean.valueOf(getConfig("dashboard.ip.useLocalDatabase"));
-    }
-
     public static String getIpFilePath() {
         return getConfig("dashboard.ip.filepath");
     }
